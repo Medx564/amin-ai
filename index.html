@@ -30,7 +30,7 @@
       --ai-bubble:    #0C1530;
     }
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-    html,body{height:100%;width:100%;background:var(--bg-deep);font-family:'JetBrains Mono',monospace;color:var(--text-primary);overflow:hidden;}
+    html,body{height:100%;width:100%;background:var(--bg-deep);font-family:'JetBrains Mono',monospace;color:var(--text-primary);overflow:hidden;pointer-events:auto;touch-action:manipulation;}
     body::before{content:'';position:fixed;inset:0;z-index:0;background:
       radial-gradient(ellipse 80% 50% at 15% 10%,rgba(0,102,255,0.09) 0%,transparent 60%),
       radial-gradient(ellipse 60% 40% at 85% 90%,rgba(0,212,255,0.06) 0%,transparent 60%),
@@ -39,7 +39,7 @@
       background-image:linear-gradient(rgba(0,212,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.025) 1px,transparent 1px);
       background-size:44px 44px;pointer-events:none;}
 
-    #app{position:relative;z-index:1;display:flex;flex-direction:column;height:100dvh;width:100%;max-width:480px;margin:0 auto;}
+    #app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;width:100%;max-width:480px;margin:0 auto;pointer-events:auto;}
 
     header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;border-bottom:1px solid var(--border);background:rgba(5,10,24,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;}
     .h-left{display:flex;align-items:center;gap:10px;}
@@ -239,5 +239,4 @@
     <div class="qa-row">
       <div class="qa" onclick="quickSend('Summarize what I just told you into key bullet points')">📝 Summarize</div>
       <div class="qa" onclick="quickSend('Quiz me on what we just discussed')">🧠 Quiz me</div>
-      <div class="qa" onclick="quickSend('Translate the last message to French')">🇫🇷 Translate</div>
-      <div class="qa" onclick="quickSend(
+      <div class="qa" onclick="quickSend('Translate the last message to French'
