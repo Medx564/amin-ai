@@ -272,8 +272,12 @@
   <div class="sm-box">
     <h2>⚙️ Settings</h2>
     <div class="sm-row">
-      <div class="sm-label">Groq API Key</div>
+      <div class="sm-label">Groq API Key (Chat)</div>
       <input class="sm-input" id="ki" type="password" placeholder="gsk_..."/>
+    </div>
+    <div class="sm-row">
+      <div class="sm-label">Google AI Studio Key (Images)</div>
+      <input class="sm-input" id="gi" type="password" placeholder="AIza..."/>
     </div>
     <button class="sm-btn" onclick="saveSettings()">Save Settings</button>
     <button class="sm-close" onclick="closeSettings()">Cancel</button>
@@ -558,6 +562,7 @@ const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com
 
 // ── STATE ──
 let groqKey = localStorage.getItem('amin_gk') || '';
+let geminiKey = localStorage.getItem('amin_ik') || '';
 let gToken = localStorage.getItem('amin_gtoken') || '';
 let gUser = JSON.parse(localStorage.getItem('amin_guser') || 'null');
 let hist = [];
@@ -1031,13 +1036,16 @@ function askAIAboutEvent(titleEnc, descEnc){
 // ── SETTINGS ──
 function openSettings(){
   document.getElementById('ki').value = groqKey;
+  document.getElementById('gi').value = geminiKey;
   document.getElementById('settings-modal').classList.add('on');
 }
 function closeSettings(){ document.getElementById('settings-modal').classList.remove('on'); }
 function saveSettings(){
   const k = document.getElementById('ki').value.trim();
+  const g = document.getElementById('gi').value.trim();
   if(!k){ toast('Enter your Groq API key'); return; }
   groqKey = k; localStorage.setItem('amin_gk', groqKey);
+  if(g){ geminiKey = g; localStorage.setItem('amin_ik', geminiKey); }
   closeSettings(); toast('✅ Settings saved!');
 }
 
@@ -1132,10 +1140,10 @@ function hk(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
 function ar(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 function clr(){ hist=[]; location.reload(); }
 
-// ── IMAGE GENERATION (Pollinations.AI - FREE, no key needed) ──
+// ── IMAGE GENERATION (Gemini 2.0 Flash - Google AI Studio) ──
 let imgStyle = '';
 let imgW = 1024, imgH = 1024;
-let lastPrompt = '';
+let lastPromptText = '';
 let imgHistoryArr = [];
 
 function selStyle(el, style){
@@ -1156,22 +1164,21 @@ function usePreset(el){
 }
 
 const loadingMessages = [
-  'Creating your masterpiece...',
-  'Painting pixels...',
-  'Summoning creativity...',
-  'Generating magic...',
-  'Almost ready...',
+  'Generating with Gemini...',
+  'Painting your vision...',
+  'Almost there...',
+  'Adding final details...',
 ];
 
 async function generateImage(){
   const promptEl = document.getElementById('img-prompt');
   const prompt = promptEl.value.trim();
   if(!prompt){ toast('✏️ Write a prompt first!'); return; }
+  if(!geminiKey){ toast('⚙️ Add your Google AI Studio key in Settings'); openSettings(); return; }
 
   const fullPrompt = imgStyle ? `${prompt}, ${imgStyle}` : prompt;
-  lastPrompt = fullPrompt;
+  lastPromptText = fullPrompt;
 
-  // UI: loading state
   const btn = document.getElementById('img-gen-btn');
   btn.disabled = true;
   document.getElementById('img-btn-text').textContent = 'Generating...';
@@ -1179,7 +1186,6 @@ async function generateImage(){
   const loadDiv = document.getElementById('img-loading');
   loadDiv.classList.add('show');
 
-  // Cycle loading messages
   let msgI = 0;
   const msgInterval = setInterval(() => {
     document.getElementById('img-loading-text').textContent = loadingMessages[msgI % loadingMessages.length];
@@ -1187,38 +1193,51 @@ async function generateImage(){
   }, 1800);
 
   try {
-    // Build Pollinations URL - free, no auth, high quality
-    const seed = Math.floor(Math.random() * 999999);
-    const encodedPrompt = encodeURIComponent(fullPrompt);
-    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${imgW}&height=${imgH}&seed=${seed}&nologo=true&enhance=true`;
-
-    // Preload image
-    await new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = url;
-      // Timeout after 30s
-      setTimeout(() => reject(new Error('timeout')), 30000);
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+      })
     });
 
+    const data = await resp.json();
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
 
-    // Show result
+    if(data.error){
+      toast('❌ ' + (data.error.message || 'Generation failed'));
+      btn.disabled = false;
+      document.getElementById('img-btn-text').textContent = 'Generate Image';
+      return;
+    }
+
+    // Extract base64 image from response
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const imgPart = parts.find(p => p.inlineData);
+    if(!imgPart){ toast('❌ No image returned. Try a different prompt.'); btn.disabled=false; document.getElementById('img-btn-text').textContent='Generate Image'; return; }
+
+    const b64 = imgPart.inlineData.data;
+    const mime = imgPart.inlineData.mimeType || 'image/png';
+    const url = `data:${mime};base64,${b64}`;
+
     const resultImg = document.getElementById('img-output');
     resultImg.src = url;
-    document.getElementById('img-download').href = url;
+    // For download, convert base64 to blob URL
+    const byteArr = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const blob = new Blob([byteArr], {type: mime});
+    const blobUrl = URL.createObjectURL(blob);
+    document.getElementById('img-download').href = blobUrl;
     document.getElementById('img-result').classList.add('show');
 
-    // Add to history
     addToImgHistory(url, prompt);
     toast('✅ Image generated!');
 
-  } catch(e) {
+  } catch(e){
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
-    toast('❌ Generation failed. Try a different prompt.');
+    toast('❌ Error: ' + e.message);
   }
 
   btn.disabled = false;
@@ -1226,15 +1245,13 @@ async function generateImage(){
 }
 
 function regenerateImage(){
-  if(!lastPrompt){ toast('Generate an image first'); return; }
-  // Same prompt, new seed (happens automatically via Math.random in generateImage)
+  if(!lastPromptText){ toast('Generate an image first'); return; }
   generateImage();
 }
 
 function addToImgHistory(url, prompt){
   imgHistoryArr.unshift({ url, prompt });
   if(imgHistoryArr.length > 10) imgHistoryArr.pop();
-
   const section = document.getElementById('img-history-section');
   const histEl = document.getElementById('img-history');
   section.style.display = 'block';
@@ -1246,10 +1263,8 @@ function addToImgHistory(url, prompt){
 
 function loadHistImg(i){
   const item = imgHistoryArr[i];
-  document.getElementById('img-prompt').value = item.prompt.replace(`, ${imgStyle}`,'').trim();
-  const resultImg = document.getElementById('img-output');
-  resultImg.src = item.url;
-  document.getElementById('img-download').href = item.url;
+  document.getElementById('img-prompt').value = item.prompt;
+  document.getElementById('img-output').src = item.url;
   document.getElementById('img-result').classList.add('show');
 }
 
