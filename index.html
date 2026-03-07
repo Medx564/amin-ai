@@ -181,7 +181,7 @@
   <div class="sb-sec">Settings</div>
   <div class="sb-item" onclick="openModal();closeSidebar()"><span class="sb-icon">🔑</span> API Key</div>
   <div class="sb-item" onclick="clearChat();closeSidebar()"><span class="sb-icon">🗑️</span> Clear Chat</div>
-  <div class="sb-foot">AMIN · AI v1.0 · Phase 1<br>Powered by Gemini 2.5 Pro<br>Built for Mohamedamin 🚀</div>
+  <div class="sb-foot">AMIN · AI v1.0 · Phase 1<br>Powered by Gemini 2.0 Flash<br>Built for Mohamedamin 🚀</div>
 </aside>
 
 <div id="modal">
@@ -204,7 +204,7 @@
     <div class="h-left">
       <button class="icon-btn" onclick="openSidebar()">☰</button>
       <div class="ai-orb"></div>
-      <div class="h-title"><span>AMIN · AI</span><span>Gemini 2.5 Pro</span></div>
+      <div class="h-title"><span>AMIN · AI</span><span>Gemini 2.0 Flash</span></div>
     </div>
     <div class="h-right">
       <div class="status-pill"><div class="dot"></div><span>Online</span></div>
@@ -221,7 +221,7 @@
         <h1>Salam, <span>Amin</span> 👋</h1>
         <p>Your personal AI — studying, business, languages, fitness, and everything in between. Yallah, let's go.</p>
       </div>
-      <div class="model-badge"><div class="mb-dot"></div>Gemini 2.5 Pro · Free Tier</div>
+      <div class="model-badge"><div class="mb-dot"></div>Gemini 2.0 Flash · Free Tier</div>
       <div class="suggestions">
         <div class="chip" onclick="quickSend('Help me prepare for my Baccalaureate. What should I focus on first?')"><span class="chip-icon">📚</span>Bac Prep</div>
         <div class="chip" onclick="quickSend('Give me a dropshipping product research strategy for zero capital from Tunisia')"><span class="chip-icon">🛍️</span>Dropshipping</div>
@@ -240,182 +240,4 @@
       <div class="qa" onclick="quickSend('Summarize what I just told you into key bullet points')">📝 Summarize</div>
       <div class="qa" onclick="quickSend('Quiz me on what we just discussed')">🧠 Quiz me</div>
       <div class="qa" onclick="quickSend('Translate the last message to French')">🇫🇷 Translate</div>
-      <div class="qa" onclick="quickSend('Write me an Instagram caption for my latest content')">📸 Caption</div>
-      <div class="qa" onclick="quickSend('Give me a calisthenics workout for today')">💪 Workout</div>
-      <div class="qa" onclick="quickSend('What should be my single top priority right now?')">🎯 Focus</div>
-    </div>
-    <div id="img-preview-wrap">
-      <img id="img-preview" src="" alt="preview"/>
-      <button id="img-clear" onclick="clearImage()">×</button>
-    </div>
-    <div class="input-row">
-      <textarea id="user-input" rows="1" placeholder="Ask anything..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-      <div class="btn-group">
-        <button id="img-btn" onclick="document.getElementById('file-input').click()">📷</button>
-        <input type="file" id="file-input" accept="image/*" onchange="handleImage(event)"/>
-        <button id="send-btn" onclick="sendMessage()">
-          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-let apiKey = localStorage.getItem('amin_key') || '';
-let history = [];
-let busy = false;
-let pendingImgB64 = null, pendingImgMime = null;
-
-const SYSTEM = `You are AMIN, a brilliant personal AI assistant built exclusively for Mohamedamin — a 17-year-old driven student and entrepreneur from Tunisia (Sidi Henri / Basma).
-
-What you know about him:
-- 3ème Secondaire, preparing for Baccalauréat, aiming for 19/20
-- Physics and chemistry are his weakest — prioritize these in study sessions
-- Building a dropshipping business from zero capital: Shopify, Canva, Make.com, Notion, Instagram, PayPal (Tunisian card)
-- YouTube channel: "Mind Canvas Studio"
-- Learning French (currently weak) and German (optional subject)
-- Practices calisthenics, interested in looksmaxxing and personal development
-- Follows Islamic values strictly — always respect this
-- Uses Xiaomi Redmi 12, Android 15
-- Big dreams: retire his parents, build a million-dollar e-commerce brand, master multiple languages, become wealthy
-
-Your style:
-- Sharp, direct, and deeply personalized — never generic
-- Speak like a brilliant mentor + coach + best friend
-- Complex topics: summary → details → action steps
-- Simple questions: concise answers only
-- Natural use of Arabic/French words: "Yallah", "Bismillah", "Alhamdulillah", "Exactement", "Voilà"
-- Always push him harder than he thinks he can go
-- When analyzing images: be thorough and specific`;
-
-window.onload = () => { if(!apiKey) setTimeout(openModal, 700); };
-
-function openModal(){ document.getElementById('modal').classList.add('on'); document.getElementById('api-input').value = apiKey; }
-function saveKey(){
-  const v = document.getElementById('api-input').value.trim();
-  if(!v){ alert('Please paste your API key.'); return; }
-  apiKey = v; localStorage.setItem('amin_key', apiKey);
-  document.getElementById('modal').classList.remove('on');
-}
-function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('on'); }
-function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('on'); }
-function soon(n){ closeSidebar(); addMsg('ai',`🚀 **${n}** is coming in Phase 2/3! Right now you're on Phase 1 — core AI. We build step by step, Amin. 💪`); }
-
-function getTime(){ return new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false}); }
-
-function fmt(t){
-  return t
-    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g,'<em>$1</em>')
-    .replace(/`(.*?)`/g,'<code>$1</code>')
-    .replace(/^### (.*)/gm,'<h3>$1</h3>')
-    .replace(/^- (.*)/gm,'<li>$1</li>')
-    .replace(/(<li>.*?)(?=<li>|$)/gs, m => m)
-    .replace(/(\n<li>.*)+/g, m => `<ul>${m}</ul>`)
-    .replace(/\n\n/g,'<br><br>')
-    .replace(/\n/g,'<br>');
-}
-
-function addMsg(role, text, imgSrc){
-  const wel = document.getElementById('welcome');
-  if(wel) wel.remove();
-  const msgs = document.getElementById('messages');
-  const typing = document.getElementById('typing');
-  const d = document.createElement('div');
-  d.className = `msg ${role}`;
-  const av = role==='ai' ? `<div class="msg-av">🤖</div>` : `<div class="msg-av">MA</div>`;
-  const imgHTML = imgSrc ? `<img src="${imgSrc}" alt=""/>` : '';
-  d.innerHTML = `${av}<div class="msg-body"><div class="msg-bubble">${fmt(text)}${imgHTML}</div><div class="msg-time">${getTime()}</div></div>`;
-  msgs.insertBefore(d, typing);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function showTyping(on){ document.getElementById('typing').className = on ? 'on' : ''; if(on) document.getElementById('messages').scrollTop=99999; }
-
-function handleImage(e){
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const full = ev.target.result;
-    pendingImgB64 = full.split(',')[1]; pendingImgMime = file.type;
-    document.getElementById('img-preview').src = full;
-    document.getElementById('img-preview-wrap').classList.add('show');
-  };
-  reader.readAsDataURL(file); e.target.value='';
-}
-function clearImage(){ pendingImgB64=null; pendingImgMime=null; document.getElementById('img-preview-wrap').classList.remove('show'); document.getElementById('img-preview').src=''; }
-
-async function sendMessage(){
-  if(busy) return;
-  if(!apiKey){ openModal(); return; }
-  const inp = document.getElementById('user-input');
-  const text = inp.value.trim();
-  if(!text && !pendingImgB64) return;
-
-  addMsg('user', text || '📷 Image sent');
-
-  const parts = [];
-  if(pendingImgB64) parts.push({ inline_data:{ mime_type: pendingImgMime, data: pendingImgB64 }});
-  if(text) parts.push({ text });
-
-  history.push({ role:'user', parts });
-  inp.value=''; autoResize(inp); clearImage();
-  busy=true; showTyping(true);
-
-  const contents = [
-    { role:'user', parts:[{ text:`[SYSTEM — always follow]\n${SYSTEM}` }]},
-    { role:'model', parts:[{ text:'Understood. I am AMIN, ready.' }]},
-    ...history
-  ];
-
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-      { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ contents, generationConfig:{ maxOutputTokens:1500, temperature:0.85 }})
-      }
-    );
-    const data = await res.json();
-    showTyping(false);
-    if(data.error){
-      const s = data.error.status;
-      const msg = s==='PERMISSION_DENIED' ? '❌ Invalid API key. Check it in Settings → API Key.'
-                : s==='RESOURCE_EXHAUSTED' ? '⚠️ Daily free limit reached. Try again tomorrow (resets midnight Pacific Time).'
-                : `⚠️ Error: ${data.error.message}`;
-      addMsg('ai', msg);
-    } else {
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.';
-      history.push({ role:'model', parts:[{ text:reply }]});
-      addMsg('ai', reply);
-    }
-  } catch(err){
-    showTyping(false);
-    addMsg('ai','⚠️ Connection error. Check your internet.');
-  }
-  busy=false;
-}
-
-function quickSend(t){ document.getElementById('user-input').value=t; sendMessage(); }
-function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); }}
-function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
-
-function clearChat(){
-  history=[];
-  document.getElementById('messages').innerHTML=`
-    <div id="welcome">
-      <div class="w-orb-wrap"><div class="w-ring"></div><div class="w-ring"></div><div class="w-orb"></div></div>
-      <div class="w-text"><h1>Salam, <span>Amin</span> 👋</h1><p>Your personal AI — studying, business, languages, fitness, and everything in between. Yallah, let's go.</p></div>
-      <div class="model-badge"><div class="mb-dot"></div>Gemini 2.5 Pro · Free Tier</div>
-      <div class="suggestions">
-        <div class="chip" onclick="quickSend('Help me prepare for my Baccalaureate. What should I focus on first?')"><span class="chip-icon">📚</span>Bac Prep</div>
-        <div class="chip" onclick="quickSend('Give me a dropshipping product research strategy for zero capital from Tunisia')"><span class="chip-icon">🛍️</span>Dropshipping</div>
-        <div class="chip" onclick="quickSend('Practice French with me — start a casual conversation')"><span class="chip-icon">🇫🇷</span>French Practice</div>
-        <div class="chip" onclick="quickSend('Give me an intense motivational coaching session to push my limits today')"><span class="chip-icon">🔥</span>Motivation</div>
-      </div>
-    </div>
-    <div id="typing"><div class="t-orb"></div><div class="t-dots"><span></span><span></span><span></span></div></div>`;
-}
-</script>
-</body>
-</html>
+      <div class="qa" onclick="quickSend(
