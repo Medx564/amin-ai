@@ -200,6 +200,46 @@
     #toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--b2);border-radius:10px;padding:10px 18px;font-size:11px;letter-spacing:.05em;color:var(--cyan);z-index:500;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
     #toast.show{opacity:1;}
 
+    /* IMAGE GEN PANEL */
+    #panel-image{flex-direction:column;}
+    .img-panel{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px;display:flex;flex-direction:column;gap:14px;}
+    .img-prompt-area{background:var(--panel);border:1px solid var(--b);border-radius:14px;padding:14px;}
+    .img-prompt-label{font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+    .img-prompt-input{width:100%;background:var(--inp);border:1px solid var(--b);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;resize:none;min-height:80px;line-height:1.6;-webkit-appearance:none;}
+    .img-prompt-input::placeholder{color:var(--dim);}
+    .img-prompt-input:focus{border-color:var(--b2);}
+    .img-options{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+    .img-opt{background:var(--inp);border:1px solid var(--b);border-radius:8px;padding:6px 12px;font-size:9.5px;letter-spacing:.06em;color:var(--muted);cursor:pointer;transition:all .2s;touch-action:manipulation;font-family:'JetBrains Mono',monospace;}
+    .img-opt.sel{border-color:var(--cyan);color:var(--cyan);background:var(--glow);}
+    .img-gen-btn{width:100%;margin-top:12px;padding:13px;background:linear-gradient(135deg,var(--blue),var(--cyan));border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:.1em;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;}
+    .img-gen-btn:active{transform:scale(.97);}
+    .img-gen-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .img-styles{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+    .img-styles::-webkit-scrollbar{display:none;}
+    .img-style-chip{flex-shrink:0;background:var(--panel);border:1px solid var(--b);border-radius:20px;padding:5px 12px;font-size:9.5px;letter-spacing:.05em;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s;touch-action:manipulation;}
+    .img-style-chip.sel{border-color:var(--gold);color:var(--gold);background:rgba(255,184,0,0.08);}
+    .img-result{background:var(--panel);border:1px solid var(--b);border-radius:14px;overflow:hidden;display:none;}
+    .img-result.show{display:block;animation:fup .4s ease both;}
+    .img-result img{width:100%;display:block;border-radius:10px 10px 0 0;}
+    .img-result-actions{display:flex;gap:8px;padding:10px 12px;}
+    .img-result-btn{flex:1;padding:9px;background:var(--inp);border:1px solid var(--b);border-radius:9px;color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;text-align:center;touch-action:manipulation;}
+    .img-result-btn:active{background:var(--glow);}
+    .img-result-btn.primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;border:none;}
+    .img-loading{display:none;flex-direction:column;align-items:center;gap:14px;padding:30px;text-align:center;}
+    .img-loading.show{display:flex;}
+    .img-spinner{width:50px;height:50px;border-radius:50%;border:3px solid var(--b);border-top-color:var(--cyan);animation:spin 0.9s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .img-spinner-text{font-size:11px;letter-spacing:.08em;color:var(--muted);}
+    .img-presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .img-preset{background:var(--panel);border:1px solid var(--b);border-radius:11px;padding:10px 11px;font-size:9.5px;letter-spacing:.03em;color:var(--muted);cursor:pointer;transition:all .2s;text-align:left;line-height:1.55;touch-action:manipulation;}
+    .img-preset:active{border-color:var(--gold);color:var(--gold);background:rgba(255,184,0,0.06);transform:scale(.97);}
+    .img-preset-icon{font-size:18px;margin-bottom:4px;display:block;}
+    .img-history{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+    .img-history::-webkit-scrollbar{display:none;}
+    .img-hist-item{flex-shrink:0;width:70px;height:70px;border-radius:10px;overflow:hidden;border:1px solid var(--b);cursor:pointer;transition:all .2s;touch-action:manipulation;}
+    .img-hist-item:active{border-color:var(--cyan);transform:scale(.95);}
+    .img-hist-item img{width:100%;height:100%;object-fit:cover;}
+
     /* STATUS TAG */
     .stag{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:.08em;padding:2px 8px;border-radius:8px;text-transform:uppercase;}
     .stag.green{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.2);}
@@ -220,10 +260,11 @@
   <div class="sbi" onclick="switchTab('gmail');closeSB()"><span class="sic">📧</span> Gmail</div>
   <div class="sbi" onclick="switchTab('calendar');closeSB()"><span class="sic">📅</span> Calendar</div>
   <div class="sbi" onclick="switchTab('docs');closeSB()"><span class="sic">📄</span> Docs / Sheets</div>
+  <div class="sbi" onclick="switchTab('image');closeSB()"><span class="sic">🎨</span> AI Image Gen</div>
   <div class="sbs">Settings</div>
   <div class="sbi" onclick="openSettings();closeSB()"><span class="sic">⚙️</span> Settings & Keys</div>
   <div class="sbi" onclick="clr();closeSB()"><span class="sic">🗑️</span> Clear Chat</div>
-  <div class="sbf">AMIN AI v2.0 · Phase 2<br>Groq · Llama 3.3 70B<br>+ Full Google Integration<br>Built for Mohamedamin 🚀</div>
+  <div class="sbf">AMIN AI v3.0 · Phase 3<br>Groq · Llama 3.3 70B<br>Google APIs + AI Image Gen<br>Built for Mohamedamin 🚀</div>
 </aside>
 
 <!-- SETTINGS MODAL -->
@@ -268,7 +309,7 @@
     <div class="hl">
       <button class="ibtn" onclick="openSB()">☰</button>
       <div class="orb"></div>
-      <div class="ht"><span>AMIN AI</span><span id="h-sub">Llama 3.3 · Google</span></div>
+      <div class="ht"><span>AMIN AI</span><span id="h-sub">Llama 3.3 · Google · Image</span></div>
     </div>
     <div class="hr">
       <div class="sp"><div class="dot"></div><span id="h-status">Online</span></div>
@@ -284,6 +325,7 @@
     <div class="tab" onclick="switchTab('gmail')" id="tab-gmail">📧 Gmail</div>
     <div class="tab" onclick="switchTab('calendar')" id="tab-calendar">📅 Calendar</div>
     <div class="tab" onclick="switchTab('docs')" id="tab-docs">📄 Docs</div>
+    <div class="tab" onclick="switchTab('image')" id="tab-image">🎨 Image</div>
   </div>
 
   <!-- CHAT PANEL -->
@@ -435,9 +477,78 @@
       </div>
     </div>
   </div>
-</div>
+  <!-- IMAGE GENERATION PANEL -->
+  <div class="panel" id="panel-image">
+    <div class="img-panel">
+      <!-- Prompt area -->
+      <div class="img-prompt-area">
+        <div class="img-prompt-label">✨ Describe your image</div>
+        <textarea class="img-prompt-input" id="img-prompt" placeholder="A futuristic city at night, neon lights, cyberpunk style, ultra detailed..."></textarea>
 
-<!-- Google Identity Services -->
+        <!-- Style chips -->
+        <div style="margin-top:10px;margin-bottom:6px;font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;">Style</div>
+        <div class="img-styles" id="img-styles">
+          <div class="img-style-chip sel" onclick="selStyle(this,'')">🎨 Default</div>
+          <div class="img-style-chip" onclick="selStyle(this,'photorealistic, DSLR, 8k')">📷 Photo</div>
+          <div class="img-style-chip" onclick="selStyle(this,'anime style, vibrant, Studio Ghibli')">🌸 Anime</div>
+          <div class="img-style-chip" onclick="selStyle(this,'oil painting, classical art, museum quality')">🖼️ Oil Paint</div>
+          <div class="img-style-chip" onclick="selStyle(this,'cyberpunk, neon, futuristic, dark')">🌃 Cyberpunk</div>
+          <div class="img-style-chip" onclick="selStyle(this,'minimalist, clean, flat design, vector')">⬜ Minimal</div>
+          <div class="img-style-chip" onclick="selStyle(this,'fantasy, epic, cinematic lighting, detailed')">⚔️ Fantasy</div>
+          <div class="img-style-chip" onclick="selStyle(this,'watercolor, soft, dreamy, artistic')">💧 Watercolor</div>
+        </div>
+
+        <!-- Size options -->
+        <div style="margin-top:12px;margin-bottom:6px;font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;">Size</div>
+        <div class="img-options" id="img-sizes">
+          <div class="img-opt sel" onclick="selSize(this,'1024','1024')">Square 1:1</div>
+          <div class="img-opt" onclick="selSize(this,'1280','720')">Wide 16:9</div>
+          <div class="img-opt" onclick="selSize(this,'720','1280')">Portrait 9:16</div>
+          <div class="img-opt" onclick="selSize(this,'1024','768')">Landscape</div>
+        </div>
+
+        <button class="img-gen-btn" id="img-gen-btn" onclick="generateImage()">
+          <span>✨</span><span id="img-btn-text">Generate Image</span>
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div class="img-loading" id="img-loading">
+        <div class="img-spinner"></div>
+        <div class="img-spinner-text" id="img-loading-text">Creating your masterpiece...</div>
+      </div>
+
+      <!-- Result -->
+      <div class="img-result" id="img-result">
+        <img id="img-output" src="" alt="Generated image"/>
+        <div class="img-result-actions">
+          <div class="img-result-btn" onclick="sendImgToChat()">💬 Discuss with AI</div>
+          <div class="img-result-btn" onclick="regenerateImage()">🔄 Regenerate</div>
+          <a class="img-result-btn primary" id="img-download" download="amin-ai-image.jpg" target="_blank">⬇ Save</a>
+        </div>
+      </div>
+
+      <!-- Presets -->
+      <div>
+        <div style="font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Quick Prompts</div>
+        <div class="img-presets">
+          <div class="img-preset" onclick="usePreset(this)"><span class="img-preset-icon">🧠</span>Motivational poster for a young Tunisian entrepreneur, bold typography, dark background</div>
+          <div class="img-preset" onclick="usePreset(this)"><span class="img-preset-icon">🌆</span>Futuristic city of Tunis in 2050, glowing skyline, cinematic shot at dusk</div>
+          <div class="img-preset" onclick="usePreset(this)"><span class="img-preset-icon">💪</span>Calisthenics athlete doing muscle-up on a rooftop, golden hour, dramatic lighting</div>
+          <div class="img-preset" onclick="usePreset(this)"><span class="img-preset-icon">📱</span>Minimalist YouTube thumbnail background, deep space, glowing particles, dark blue</div>
+          <div class="img-preset" onclick="usePreset(this)"><span class="img-preset-icon">🛍️</span>Luxury product mockup, clean white background, soft shadows, ecommerce style</div>
+          <div class="img-preset" onclick="usePreset(this)"><span class="img-preset-icon">🌙</span>Beautiful mosque at night, golden lights, stars, serene and peaceful atmosphere</div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div id="img-history-section" style="display:none;">
+        <div style="font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Recent Images</div>
+        <div class="img-history" id="img-history"></div>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <script>
@@ -1020,6 +1131,133 @@ function qs(t){ switchTab('chat'); document.getElementById('inp').value=t; send(
 function hk(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
 function ar(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 function clr(){ hist=[]; location.reload(); }
+
+// ── IMAGE GENERATION (Pollinations.AI - FREE, no key needed) ──
+let imgStyle = '';
+let imgW = 1024, imgH = 1024;
+let lastPrompt = '';
+let imgHistoryArr = [];
+
+function selStyle(el, style){
+  document.querySelectorAll('.img-style-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  imgStyle = style;
+}
+
+function selSize(el, w, h){
+  document.querySelectorAll('.img-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  imgW = parseInt(w); imgH = parseInt(h);
+}
+
+function usePreset(el){
+  const text = el.innerText.replace(el.querySelector('.img-preset-icon').innerText, '').trim();
+  document.getElementById('img-prompt').value = text;
+}
+
+const loadingMessages = [
+  'Creating your masterpiece...',
+  'Painting pixels...',
+  'Summoning creativity...',
+  'Generating magic...',
+  'Almost ready...',
+];
+
+async function generateImage(){
+  const promptEl = document.getElementById('img-prompt');
+  const prompt = promptEl.value.trim();
+  if(!prompt){ toast('✏️ Write a prompt first!'); return; }
+
+  const fullPrompt = imgStyle ? `${prompt}, ${imgStyle}` : prompt;
+  lastPrompt = fullPrompt;
+
+  // UI: loading state
+  const btn = document.getElementById('img-gen-btn');
+  btn.disabled = true;
+  document.getElementById('img-btn-text').textContent = 'Generating...';
+  document.getElementById('img-result').classList.remove('show');
+  const loadDiv = document.getElementById('img-loading');
+  loadDiv.classList.add('show');
+
+  // Cycle loading messages
+  let msgI = 0;
+  const msgInterval = setInterval(() => {
+    document.getElementById('img-loading-text').textContent = loadingMessages[msgI % loadingMessages.length];
+    msgI++;
+  }, 1800);
+
+  try {
+    // Build Pollinations URL - free, no auth, high quality
+    const seed = Math.floor(Math.random() * 999999);
+    const encodedPrompt = encodeURIComponent(fullPrompt);
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${imgW}&height=${imgH}&seed=${seed}&nologo=true&enhance=true`;
+
+    // Preload image
+    await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = url;
+      // Timeout after 30s
+      setTimeout(() => reject(new Error('timeout')), 30000);
+    });
+
+    clearInterval(msgInterval);
+    loadDiv.classList.remove('show');
+
+    // Show result
+    const resultImg = document.getElementById('img-output');
+    resultImg.src = url;
+    document.getElementById('img-download').href = url;
+    document.getElementById('img-result').classList.add('show');
+
+    // Add to history
+    addToImgHistory(url, prompt);
+    toast('✅ Image generated!');
+
+  } catch(e) {
+    clearInterval(msgInterval);
+    loadDiv.classList.remove('show');
+    toast('❌ Generation failed. Try a different prompt.');
+  }
+
+  btn.disabled = false;
+  document.getElementById('img-btn-text').textContent = 'Generate Image';
+}
+
+function regenerateImage(){
+  if(!lastPrompt){ toast('Generate an image first'); return; }
+  // Same prompt, new seed (happens automatically via Math.random in generateImage)
+  generateImage();
+}
+
+function addToImgHistory(url, prompt){
+  imgHistoryArr.unshift({ url, prompt });
+  if(imgHistoryArr.length > 10) imgHistoryArr.pop();
+
+  const section = document.getElementById('img-history-section');
+  const histEl = document.getElementById('img-history');
+  section.style.display = 'block';
+  histEl.innerHTML = imgHistoryArr.map((item, i) => `
+    <div class="img-hist-item" onclick="loadHistImg(${i})" title="${item.prompt}">
+      <img src="${item.url}" alt="history"/>
+    </div>`).join('');
+}
+
+function loadHistImg(i){
+  const item = imgHistoryArr[i];
+  document.getElementById('img-prompt').value = item.prompt.replace(`, ${imgStyle}`,'').trim();
+  const resultImg = document.getElementById('img-output');
+  resultImg.src = item.url;
+  document.getElementById('img-download').href = item.url;
+  document.getElementById('img-result').classList.add('show');
+}
+
+function sendImgToChat(){
+  const prompt = document.getElementById('img-prompt').value.trim();
+  switchTab('chat');
+  qs(`I just generated an AI image with this prompt: "${prompt}". How can I improve this prompt to get an even better result? Also suggest 3 variations I could try.`);
+}
 </script>
 </body>
 </html>
