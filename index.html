@@ -393,29 +393,6 @@
   </div>
 </div>
 
-<!-- DETAIL MODAL -->
-<div id="detail-modal">
-  <div class="dm-header">
-    <span class="dm-back" onclick="closeDetail()">←</span>
-    <span class="dm-title" id="dm-title">—</span>
-    <span id="dm-tag"></span>
-  </div>
-  <div class="dm-body">
-    <div class="dm-content" id="dm-content">Loading...</div>
-  </div>
-  <div class="dm-actions" id="dm-actions"></div>
-</div>
-
-<!-- COMPOSE MODAL -->
-<div id="compose-modal">
-  <div class="cm-header">
-    <span class="cm-title" id="cm-title">Compose</span>
-    <span class="cm-close" onclick="closeCompose()">✕</span>
-  </div>
-  <div class="cm-body" id="cm-body"></div>
-  <button class="cm-send" id="cm-send-btn" onclick="submitCompose()">Send</button>
-</div>
-
 <!-- APP -->
 <div id="app">
   <header>
@@ -666,6 +643,31 @@
       </div>
     </div>
   </div>
+
+
+<!-- DETAIL MODAL -->
+<div id="detail-modal" class="dm-overlay">
+  <div class="dm-header">
+    <span class="dm-back" onclick="closeDetail()">←</span>
+    <span class="dm-title" id="dm-title">—</span>
+    <span id="dm-tag"></span>
+  </div>
+  <div class="dm-body">
+    <div class="dm-content" id="dm-content">Loading...</div>
+  </div>
+  <div class="dm-actions" id="dm-actions"></div>
+</div>
+
+<!-- COMPOSE MODAL -->
+<div id="compose-modal" class="cm-overlay">
+  <div class="cm-header">
+    <button class="dm-back" onclick="closeCompose()">←</button>
+    <span class="dm-title" id="cm-title">Compose</span>
+  </div>
+  <div class="cm-body" id="cm-body"></div>
+  <button class="cm-send" id="cm-send-btn" onclick="submitCompose()">Send</button>
+</div>
+
 </div>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
