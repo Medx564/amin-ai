@@ -275,6 +275,10 @@
       <div class="sm-label">Groq API Key</div>
       <input class="sm-input" id="ki" type="password" placeholder="gsk_..."/>
     </div>
+    <div class="sm-row">
+      <div class="sm-label">Image Worker URL</div>
+      <input class="sm-input" id="wi" type="text" placeholder="https://amin-img.yourname.workers.dev"/>
+    </div>
     <button class="sm-btn" onclick="saveSettings()">Save Settings</button>
     <button class="sm-close" onclick="closeSettings()">Cancel</button>
   </div>
@@ -558,6 +562,7 @@ const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com
 
 // ── STATE ──
 let groqKey = localStorage.getItem('amin_gk') || '';
+let workerUrl = localStorage.getItem('amin_wu') || 'YOUR_WORKER_URL_HERE';
 let gToken = localStorage.getItem('amin_gtoken') || '';
 let gUser = JSON.parse(localStorage.getItem('amin_guser') || 'null');
 let hist = [];
@@ -1031,13 +1036,16 @@ function askAIAboutEvent(titleEnc, descEnc){
 // ── SETTINGS ──
 function openSettings(){
   document.getElementById('ki').value = groqKey;
+  document.getElementById('wi').value = (workerUrl && workerUrl !== 'YOUR_WORKER_URL_HERE') ? workerUrl : '';
   document.getElementById('settings-modal').classList.add('on');
 }
 function closeSettings(){ document.getElementById('settings-modal').classList.remove('on'); }
 function saveSettings(){
   const k = document.getElementById('ki').value.trim();
+  const w = document.getElementById('wi').value.trim();
   if(!k){ toast('Enter your Groq API key'); return; }
   groqKey = k; localStorage.setItem('amin_gk', groqKey);
+  if(w){ workerUrl = w; localStorage.setItem('amin_wu', workerUrl); }
   closeSettings(); toast('✅ Settings saved!');
 }
 
@@ -1157,10 +1165,13 @@ function usePreset(el){
 
 
 
+// workerUrl is stored in localStorage and managed via Settings
+
 async function generateImage(){
   const promptEl = document.getElementById('img-prompt');
   const prompt = promptEl.value.trim();
   if(!prompt){ toast('Write a prompt first!'); return; }
+  if(!workerUrl || workerUrl === 'YOUR_WORKER_URL_HERE'){ toast('⚙️ Set your Worker URL in Settings'); openSettings(); return; }
 
   const fullPrompt = imgStyle ? prompt + ', ' + imgStyle : prompt;
   lastPromptText = fullPrompt;
@@ -1176,37 +1187,28 @@ async function generateImage(){
   const msgInterval = setInterval(() => {
     document.getElementById('img-loading-text').textContent = loadingMessages[msgI % loadingMessages.length];
     msgI++;
-  }, 2000);
-
-  const tryGenerate = (attempt=1) => {
-    const seed = Math.floor(Math.random() * 999999);
-    const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(fullPrompt) + '?width=' + imgW + '&height=' + imgH + '&seed=' + seed + '&nologo=true&model=flux';
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const timer = setTimeout(() => {
-        img.src='';
-        if(attempt<3){ document.getElementById('img-loading-text').textContent='Retrying ('+attempt+'/3)...'; tryGenerate(attempt+1).then(resolve).catch(reject); }
-        else reject(new Error('timeout'));
-      }, 30000);
-      img.onload = () => { clearTimeout(timer); resolve(url); };
-      img.onerror = () => { clearTimeout(timer); if(attempt<3){ document.getElementById('img-loading-text').textContent='Retrying ('+attempt+'/3)...'; tryGenerate(attempt+1).then(resolve).catch(reject); } else reject(new Error('failed')); };
-      img.src = url;
-    });
-  };
+  }, 2500);
 
   try {
-    const url = await tryGenerate();
+    const resp = await fetch(workerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: fullPrompt, width: imgW, height: imgH })
+    });
+    const data = await resp.json();
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
-    document.getElementById('img-output').src = url;
-    document.getElementById('img-download').href = url;
+    if(data.error){ toast('❌ ' + data.error); btn.disabled=false; document.getElementById('img-btn-text').textContent='Generate Image'; return; }
+    const src = 'data:image/jpeg;base64,' + data.image;
+    document.getElementById('img-output').src = src;
+    document.getElementById('img-download').href = src;
     document.getElementById('img-result').classList.add('show');
-    addToImgHistory(url, prompt);
-    toast('Image generated!');
+    addToImgHistory(src, prompt);
+    toast('✅ Image generated!');
   } catch(e){
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
-    toast('Failed after 3 attempts. Try again later.');
+    toast('❌ Could not reach image server. Check your connection.');
   }
   btn.disabled = false;
   document.getElementById('img-btn-text').textContent = 'Generate Image';
