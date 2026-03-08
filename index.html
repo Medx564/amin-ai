@@ -276,8 +276,8 @@
       <input class="sm-input" id="ki" type="password" placeholder="gsk_..."/>
     </div>
     <div class="sm-row">
-      <div class="sm-label">Google AI Studio Key (Images)</div>
-      <input class="sm-input" id="gi" type="password" placeholder="AIza..."/>
+      <div class="sm-label">Hugging Face Key (Images)</div>
+      <input class="sm-input" id="gi" type="password" placeholder="hf_..."/>
     </div>
     <button class="sm-btn" onclick="saveSettings()">Save Settings</button>
     <button class="sm-close" onclick="closeSettings()">Cancel</button>
@@ -1140,7 +1140,7 @@ function hk(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
 function ar(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 function clr(){ hist=[]; location.reload(); }
 
-// ── IMAGE GENERATION (Gemini 2.0 Flash - Google AI Studio) ──
+// ── IMAGE GENERATION (Hugging Face - FLUX.1 - FREE) ──
 let imgStyle = '';
 let imgW = 1024, imgH = 1024;
 let lastPromptText = '';
@@ -1164,17 +1164,17 @@ function usePreset(el){
 }
 
 const loadingMessages = [
-  'Generating with Gemini...',
+  'Generating with FLUX.1...',
   'Painting your vision...',
-  'Almost there...',
-  'Adding final details...',
+  'Adding details...',
+  'Almost ready...',
 ];
 
 async function generateImage(){
   const promptEl = document.getElementById('img-prompt');
   const prompt = promptEl.value.trim();
   if(!prompt){ toast('✏️ Write a prompt first!'); return; }
-  if(!geminiKey){ toast('⚙️ Add your Google AI Studio key in Settings'); openSettings(); return; }
+  if(!geminiKey){ toast('⚙️ Add your Hugging Face key in Settings'); openSettings(); return; }
 
   const fullPrompt = imgStyle ? `${prompt}, ${imgStyle}` : prompt;
   lastPromptText = fullPrompt;
@@ -1193,42 +1193,35 @@ async function generateImage(){
   }, 1800);
 
   try {
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${geminiKey}`, {
+    const resp = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': 'Bearer ' + geminiKey,
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: fullPrompt }] }],
-        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+        inputs: fullPrompt,
+        parameters: { width: imgW, height: imgH }
       })
     });
 
-    const data = await resp.json();
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
 
-    if(data.error){
-      toast('❌ ' + (data.error.message || 'Generation failed'));
+    if(!resp.ok){
+      const err = await resp.json().catch(() => ({}));
+      toast('❌ ' + (err.error || 'Generation failed. Try again.'));
       btn.disabled = false;
       document.getElementById('img-btn-text').textContent = 'Generate Image';
       return;
     }
 
-    // Extract base64 image from response
-    const parts = data.candidates?.[0]?.content?.parts || [];
-    const imgPart = parts.find(p => p.inlineData);
-    if(!imgPart){ toast('❌ No image returned. Try a different prompt.'); btn.disabled=false; document.getElementById('img-btn-text').textContent='Generate Image'; return; }
+    // HF returns raw image blob
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
 
-    const b64 = imgPart.inlineData.data;
-    const mime = imgPart.inlineData.mimeType || 'image/png';
-    const url = `data:${mime};base64,${b64}`;
-
-    const resultImg = document.getElementById('img-output');
-    resultImg.src = url;
-    // For download, convert base64 to blob URL
-    const byteArr = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    const blob = new Blob([byteArr], {type: mime});
-    const blobUrl = URL.createObjectURL(blob);
-    document.getElementById('img-download').href = blobUrl;
+    document.getElementById('img-output').src = url;
+    document.getElementById('img-download').href = url;
     document.getElementById('img-result').classList.add('show');
 
     addToImgHistory(url, prompt);
@@ -1267,6 +1260,36 @@ function loadHistImg(i){
   document.getElementById('img-output').src = item.url;
   document.getElementById('img-result').classList.add('show');
 }
+
+function sendImgToChat(){
+  const prompt = document.getElementById('img-prompt').value.trim();
+  switchTab('chat');
+  qs(`I just generated an AI image with this prompt: "${prompt}". How can I improve this prompt to get an even better result? Also suggest 3 variations I could try.`);
+}
+
+function selStyle(el, style){
+  document.querySelectorAll('.img-style-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  imgStyle = style;
+}
+
+function selSize(el, w, h){
+  document.querySelectorAll('.img-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  imgW = parseInt(w); imgH = parseInt(h);
+}
+
+function usePreset(el){
+  const text = el.innerText.replace(el.querySelector('.img-preset-icon').innerText, '').trim();
+  document.getElementById('img-prompt').value = text;
+}
+
+const loadingMessages = [
+  'Generating with Gemini...',
+  'Painting your vision...',
+  'Almost there...',
+  'Adding final details...',
+];
 
 function sendImgToChat(){
   const prompt = document.getElementById('img-prompt').value.trim();
