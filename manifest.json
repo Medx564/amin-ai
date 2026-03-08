@@ -2,7 +2,7 @@
   "name": "AMIN · AI Personal Assistant",
   "short_name": "AMIN AI",
   "description": "Mohamedamin's personal AI assistant",
-  "start_url": "/amin-ai/index.html",
+  "start_url": "/amin-ai/",
   "scope": "/amin-ai/",
   "display": "standalone",
   "background_color": "#050A18",
