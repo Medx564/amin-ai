@@ -105,6 +105,19 @@
     #sbtn{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--blue),var(--cyan));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(0,212,255,0.28);transition:all .2s;flex-shrink:0;touch-action:manipulation;}
     #sbtn:active{transform:scale(.91);}
     #sbtn svg{width:18px;height:18px;fill:white;}
+    #mic-btn{width:42px;height:42px;border-radius:11px;background:var(--panel);border:1px solid var(--b);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;touch-action:manipulation;}
+    #mic-btn:active{transform:scale(.91);}
+    #mic-btn svg{width:18px;height:18px;fill:var(--muted);transition:fill .2s;}
+    #mic-btn.listening{background:rgba(255,60,60,0.12);border-color:rgba(255,60,60,0.5);animation:mic-pulse 1s ease-in-out infinite;}
+    #mic-btn.listening svg{fill:#ff4444;}
+    .mic-lang-row{display:flex;gap:6px;margin-bottom:0;align-items:center;}
+    .mic-lang{font-size:9px;letter-spacing:.1em;padding:3px 9px;border-radius:7px;border:1px solid var(--b);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;touch-action:manipulation;}
+    .mic-lang.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,212,255,0.08);}
+    .img-hist-wrap{position:relative;flex-shrink:0;}
+    .img-hist-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.7);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;touch-action:manipulation;pointer-events:none;}
+    .img-hist-wrap:hover .img-hist-del,.img-hist-wrap:active .img-hist-del{opacity:1;pointer-events:all;}
+    .img-hist-del svg{width:10px;height:10px;fill:#ff4444;}
+    @keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,60,60,0.3);}50%{box-shadow:0 0 0 8px rgba(255,60,60,0);}}
 
     /* GOOGLE PANEL shared styles */
     .g-panel{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px;}
@@ -361,7 +374,9 @@
         <div class="qa" onclick="qs('Translate the last message to French')">🇫🇷 Translate</div>
         <div class="qa" onclick="qs('Give me a calisthenics workout for today')">💪 Workout</div>
       </div>
+      <div class="mic-lang-row"><span style="font-size:9px;color:var(--muted);letter-spacing:.08em;">Voice:</span><button class="mic-lang on" id="lang-en" onclick="setLang('en-US',this)">EN</button><button class="mic-lang" id="lang-ar" onclick="setLang('ar-SA',this)">AR</button><button class="mic-lang" id="lang-fr" onclick="setLang('fr-FR',this)">FR</button></div>
       <div class="irow">
+        <button id="mic-btn" onclick="toggleMic()" title="Voice input"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg></button>
         <textarea id="inp" rows="1" placeholder="Ask anything..." onkeydown="hk(event)" oninput="ar(this)"></textarea>
         <button id="sbtn" onclick="send()">
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
@@ -546,7 +561,7 @@
       </div>
 
       <!-- History -->
-      <div id="img-history-section" style="display:none;">
+      <div id="img-history-section" style="display:none;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><div style="font-size:9.5px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;">Recent Images</div><div onclick="clearImgHistory()" style="font-size:9.5px;color:var(--muted);cursor:pointer;padding:3px 8px;border:1px solid var(--b);border-radius:6px;touch-action:manipulation;">Clear</div></div>
         <div style="font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Recent Images</div>
         <div class="img-history" id="img-history"></div>
       </div>
@@ -1137,6 +1152,57 @@ async function send(){
 
 function qs(t){ switchTab('chat'); document.getElementById('inp').value=t; send(); }
 function hk(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
+
+// Voice Input
+var recognition = null;
+var isListening = false;
+var micLang = "en-US";
+
+function toggleMic(){
+  if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+    toast('Voice not supported on this browser'); return;
+  }
+  if(isListening){ stopMic(); return; }
+  startMic();
+}
+
+function startMic(){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = micLang;
+  recognition.interimResults = true;
+  recognition.continuous = false;
+  var btn = document.getElementById('mic-btn');
+  var inp = document.getElementById('inp');
+  isListening = true;
+  btn.classList.add('listening');
+  toast('Listening...');
+  recognition.onresult = function(e){
+    var t = '';
+    for(var i=e.resultIndex;i<e.results.length;i++) t += e.results[i][0].transcript;
+    inp.value = t; ar(inp);
+  };
+  recognition.onend = function(){ isListening=false; btn.classList.remove('listening'); };
+  recognition.onerror = function(e){
+    isListening=false; btn.classList.remove('listening');
+    if(e.error==='not-allowed') toast('Microphone access denied');
+    else if(e.error!=='no-speech') toast('Voice error: '+e.error);
+  };
+  recognition.start();
+}
+
+function stopMic(){
+  if(recognition) recognition.stop();
+  isListening=false;
+  document.getElementById('mic-btn').classList.remove('listening');
+}
+
+function setLang(lang, el){
+  micLang = lang;
+  document.querySelectorAll('.mic-lang').forEach(function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+}
+
 function ar(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 function clr(){ hist=[]; location.reload(); }
 
@@ -1144,7 +1210,7 @@ function clr(){ hist=[]; location.reload(); }
 let imgStyle = '';
 let imgW = 1024, imgH = 1024;
 let lastPromptText = '';
-let imgHistoryArr = [];
+let imgHistoryArr = JSON.parse(localStorage.getItem('amin_ih') || '[]');
 
 function selStyle(el, style){
   document.querySelectorAll('.img-style-chip').forEach(c => c.classList.remove('sel'));
@@ -1219,15 +1285,40 @@ function regenerateImage(){
 }
 
 function addToImgHistory(url, prompt){
-  imgHistoryArr.unshift({ url, prompt });
-  if(imgHistoryArr.length > 10) imgHistoryArr.pop();
-  const section = document.getElementById('img-history-section');
-  const histEl = document.getElementById('img-history');
+  imgHistoryArr.unshift({ url: url, prompt: prompt, ts: Date.now() });
+  if(imgHistoryArr.length > 20) imgHistoryArr.pop();
+  try { localStorage.setItem('amin_ih', JSON.stringify(imgHistoryArr)); } catch(e){}
+  renderImgHistory();
+}
+
+function renderImgHistory(){
+  var section = document.getElementById('img-history-section');
+  var histEl = document.getElementById('img-history');
+  if(!imgHistoryArr.length){ section.style.display='none'; return; }
   section.style.display = 'block';
-  histEl.innerHTML = imgHistoryArr.map((item, i) => `
-    <div class="img-hist-item" onclick="loadHistImg(${i})" title="${item.prompt}">
-      <img src="${item.url}" alt="history"/>
-    </div>`).join('');
+  histEl.innerHTML = imgHistoryArr.map(function(item, i){
+    return '<div class="img-hist-wrap">'+
+      '<div class="img-hist-item" onclick="loadHistImg('+i+')" title="'+item.prompt.replace(/"/g,'&quot;')+'">'+
+        '<img src="'+item.url+'" alt="history" loading="lazy"/>'+
+      '</div>'+
+      '<button class="img-hist-del" onclick="deleteHistImg(event,'+i+')" title="Delete">'+
+        '<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>'+
+      '</button>'+
+    '</div>';
+  }).join('');
+}
+function clearImgHistory(){
+  imgHistoryArr = [];
+  localStorage.removeItem('amin_ih');
+  renderImgHistory();
+  toast('History cleared');
+}
+function deleteHistImg(e, i){
+  e.stopPropagation();
+  imgHistoryArr.splice(i, 1);
+  try { localStorage.setItem('amin_ih', JSON.stringify(imgHistoryArr)); } catch(err){}
+  renderImgHistory();
+  toast('Image deleted');
 }
 
 function loadHistImg(i){
