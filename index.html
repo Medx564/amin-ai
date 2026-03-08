@@ -12,12 +12,11 @@
   <style>
     :root{--bg:#050A18;--bg2:#080F22;--panel:#0C1530;--inp:#0A1228;--cyan:#00D4FF;--blue:#0066FF;--gold:#FFB800;--green:#00FF88;--red:#FF4466;--glow:rgba(0,212,255,0.12);--text:#E8F4FF;--muted:#4A6B8A;--dim:#1E3A5F;--b:rgba(0,212,255,0.10);--b2:rgba(0,212,255,0.32);}
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-    html{height:100%;width:100%;}
-    body{height:100%;width:100%;background:var(--bg);font-family:'JetBrains Mono','Courier New',monospace;color:var(--text);overflow:hidden;pointer-events:auto;touch-action:manipulation;display:flex;flex-direction:column;}
+    html,body{height:100%;width:100%;background:var(--bg);font-family:'JetBrains Mono',monospace;color:var(--text);overflow:hidden;pointer-events:auto;touch-action:manipulation;}
     body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 50% at 15% 10%,rgba(0,102,255,0.09) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 85% 90%,rgba(0,212,255,0.06) 0%,transparent 60%);pointer-events:none;}
     body::after{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(0,212,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
 
-    #app{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;width:100%;max-width:480px;margin:0 auto;pointer-events:auto;overflow:hidden;}
+    #app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;width:100%;max-width:480px;margin:0 auto;pointer-events:auto;}
 
     /* HEADER */
     header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;border-bottom:1px solid var(--b);background:rgba(5,10,24,0.92);backdrop-filter:blur(20px);flex-shrink:0;}
@@ -273,12 +272,8 @@
   <div class="sm-box">
     <h2>⚙️ Settings</h2>
     <div class="sm-row">
-      <div class="sm-label">Groq API Key (Chat)</div>
+      <div class="sm-label">Groq API Key</div>
       <input class="sm-input" id="ki" type="password" placeholder="gsk_..."/>
-    </div>
-    <div class="sm-row">
-      <div class="sm-label">Hugging Face Key (Images)</div>
-      <input class="sm-input" id="gi" type="password" placeholder="hf_..."/>
     </div>
     <button class="sm-btn" onclick="saveSettings()">Save Settings</button>
     <button class="sm-close" onclick="closeSettings()">Cancel</button>
@@ -563,7 +558,6 @@ const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com
 
 // ── STATE ──
 let groqKey = localStorage.getItem('amin_gk') || '';
-let geminiKey = localStorage.getItem('amin_ik') || '';
 let gToken = localStorage.getItem('amin_gtoken') || '';
 let gUser = JSON.parse(localStorage.getItem('amin_guser') || 'null');
 let hist = [];
@@ -574,11 +568,7 @@ let composeType = '', currentDetail = null;
 let tokenClient = null;
 
 // ── PWA HEIGHT FIX ──
-function fh(){
-  const h = window.innerHeight + 'px';
-  document.body.style.height = h;
-  document.getElementById('app').style.height = h;
-}
+function fh(){ document.getElementById('app').style.height = window.innerHeight + 'px'; }
 fh();
 window.addEventListener('resize', fh);
 window.addEventListener('orientationchange', () => setTimeout(fh, 300));
@@ -1041,16 +1031,13 @@ function askAIAboutEvent(titleEnc, descEnc){
 // ── SETTINGS ──
 function openSettings(){
   document.getElementById('ki').value = groqKey;
-  document.getElementById('gi').value = geminiKey;
   document.getElementById('settings-modal').classList.add('on');
 }
 function closeSettings(){ document.getElementById('settings-modal').classList.remove('on'); }
 function saveSettings(){
   const k = document.getElementById('ki').value.trim();
-  const g = document.getElementById('gi').value.trim();
   if(!k){ toast('Enter your Groq API key'); return; }
   groqKey = k; localStorage.setItem('amin_gk', groqKey);
-  if(g){ geminiKey = g; localStorage.setItem('amin_ik', geminiKey); }
   closeSettings(); toast('✅ Settings saved!');
 }
 
@@ -1168,20 +1155,14 @@ function usePreset(el){
   document.getElementById('img-prompt').value = text;
 }
 
-const loadingMessages = [
-  'Generating with FLUX.1...',
-  'Painting your vision...',
-  'Adding details...',
-  'Almost ready...',
-];
+
 
 async function generateImage(){
   const promptEl = document.getElementById('img-prompt');
   const prompt = promptEl.value.trim();
-  if(!prompt){ toast('✏️ Write a prompt first!'); return; }
-  if(!geminiKey){ toast('⚙️ Add your Hugging Face key in Settings'); openSettings(); return; }
+  if(!prompt){ toast('Write a prompt first!'); return; }
 
-  const fullPrompt = imgStyle ? `${prompt}, ${imgStyle}` : prompt;
+  const fullPrompt = imgStyle ? prompt + ', ' + imgStyle : prompt;
   lastPromptText = fullPrompt;
 
   const btn = document.getElementById('img-gen-btn');
@@ -1195,70 +1176,41 @@ async function generateImage(){
   const msgInterval = setInterval(() => {
     document.getElementById('img-loading-text').textContent = loadingMessages[msgI % loadingMessages.length];
     msgI++;
-  }, 1800);
+  }, 2000);
 
-  const tryFetch = async (retries = 4) => {
-    const resp = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + geminiKey,
-        'Content-Type': 'application/json',
-        'x-wait-for-model': 'true'
-      },
-      body: JSON.stringify({
-        inputs: fullPrompt,
-        parameters: { width: imgW, height: imgH, num_inference_steps: 4 }
-      })
+  const tryGenerate = (attempt=1) => {
+    const seed = Math.floor(Math.random() * 999999);
+    const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(fullPrompt) + '?width=' + imgW + '&height=' + imgH + '&seed=' + seed + '&nologo=true&model=flux';
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const timer = setTimeout(() => {
+        img.src='';
+        if(attempt<3){ document.getElementById('img-loading-text').textContent='Retrying ('+attempt+'/3)...'; tryGenerate(attempt+1).then(resolve).catch(reject); }
+        else reject(new Error('timeout'));
+      }, 30000);
+      img.onload = () => { clearTimeout(timer); resolve(url); };
+      img.onerror = () => { clearTimeout(timer); if(attempt<3){ document.getElementById('img-loading-text').textContent='Retrying ('+attempt+'/3)...'; tryGenerate(attempt+1).then(resolve).catch(reject); } else reject(new Error('failed')); };
+      img.src = url;
     });
-
-    // Model is loading — wait and retry
-    if(resp.status === 503 && retries > 0){
-      document.getElementById('img-loading-text').textContent = 'Model warming up, retrying...';
-      await new Promise(r => setTimeout(r, 8000));
-      return tryFetch(retries - 1);
-    }
-
-    return resp;
   };
 
   try {
-    const resp = await tryFetch();
-
+    const url = await tryGenerate();
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
-
-    if(!resp.ok){
-      let errMsg = 'Generation failed.';
-      try {
-        const err = await resp.json();
-        errMsg = err.error || errMsg;
-      } catch(e){}
-      toast('❌ ' + errMsg);
-      btn.disabled = false;
-      document.getElementById('img-btn-text').textContent = 'Generate Image';
-      return;
-    }
-
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-
     document.getElementById('img-output').src = url;
     document.getElementById('img-download').href = url;
     document.getElementById('img-result').classList.add('show');
-
     addToImgHistory(url, prompt);
-    toast('✅ Image generated!');
-
+    toast('Image generated!');
   } catch(e){
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
-    toast('❌ Network error. Check your connection.');
+    toast('Failed after 3 attempts. Try again later.');
   }
-
   btn.disabled = false;
   document.getElementById('img-btn-text').textContent = 'Generate Image';
 }
-
 function regenerateImage(){
   if(!lastPromptText){ toast('Generate an image first'); return; }
   generateImage();
@@ -1305,6 +1257,13 @@ function usePreset(el){
   const text = el.innerText.replace(el.querySelector('.img-preset-icon').innerText, '').trim();
   document.getElementById('img-prompt').value = text;
 }
+
+const loadingMessages = [
+  'Generating with Gemini...',
+  'Painting your vision...',
+  'Almost there...',
+  'Adding final details...',
+];
 
 function sendImgToChat(){
   const prompt = document.getElementById('img-prompt').value.trim();
