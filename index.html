@@ -1197,31 +1197,48 @@ async function generateImage(){
     msgI++;
   }, 1800);
 
-  try {
+  const tryFetch = async (retries = 4) => {
     const resp = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + geminiKey,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-wait-for-model': 'true'
       },
       body: JSON.stringify({
         inputs: fullPrompt,
-        parameters: { width: imgW, height: imgH }
+        parameters: { width: imgW, height: imgH, num_inference_steps: 4 }
       })
     });
+
+    // Model is loading — wait and retry
+    if(resp.status === 503 && retries > 0){
+      document.getElementById('img-loading-text').textContent = 'Model warming up, retrying...';
+      await new Promise(r => setTimeout(r, 8000));
+      return tryFetch(retries - 1);
+    }
+
+    return resp;
+  };
+
+  try {
+    const resp = await tryFetch();
 
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
 
     if(!resp.ok){
-      const err = await resp.json().catch(() => ({}));
-      toast('❌ ' + (err.error || 'Generation failed. Try again.'));
+      let errMsg = 'Generation failed.';
+      try {
+        const err = await resp.json();
+        errMsg = err.error || errMsg;
+      } catch(e){}
+      toast('❌ ' + errMsg);
       btn.disabled = false;
       document.getElementById('img-btn-text').textContent = 'Generate Image';
       return;
     }
 
-    // HF returns raw image blob
     const blob = await resp.blob();
     const url = URL.createObjectURL(blob);
 
@@ -1235,7 +1252,7 @@ async function generateImage(){
   } catch(e){
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
-    toast('❌ Error: ' + e.message);
+    toast('❌ Network error. Check your connection.');
   }
 
   btn.disabled = false;
