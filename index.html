@@ -1389,10 +1389,42 @@ async function generateImage(){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: fullPrompt, width: imgW, height: imgH })
     });
-    const data = await resp.json();
+    
+    if (!resp.ok) {
+      clearInterval(msgInterval);
+      loadDiv.classList.remove('show');
+      toast('❌ HTTP error: ' + resp.status + ' ' + resp.statusText);
+      btn.disabled = false;
+      document.getElementById('img-btn-text').textContent = 'Generate Image';
+      return;
+    }
+    
+    let data;
+    try {
+      data = await resp.json();
+    } catch(e) {
+      clearInterval(msgInterval);
+      loadDiv.classList.remove('show');
+      toast('❌ Invalid response from server (not JSON)');
+      btn.disabled = false;
+      document.getElementById('img-btn-text').textContent = 'Generate Image';
+      return;
+    }
+    
     clearInterval(msgInterval);
     loadDiv.classList.remove('show');
-    if(data.error){ toast('❌ ' + data.error); btn.disabled=false; document.getElementById('img-btn-text').textContent='Generate Image'; return; }
+    if (data.error) {
+      toast('❌ ' + data.error);
+      btn.disabled = false;
+      document.getElementById('img-btn-text').textContent = 'Generate Image';
+      return;
+    }
+    if (!data.image) {
+      toast('❌ No image data received');
+      btn.disabled = false;
+      document.getElementById('img-btn-text').textContent = 'Generate Image';
+      return;
+    }
     const src = 'data:image/jpeg;base64,' + data.image;
     document.getElementById('img-output').src = src;
     document.getElementById('img-download').href = src;
