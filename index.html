@@ -1369,7 +1369,7 @@ const loadingMessages = [
 async function generateImage(){
   const prompt = document.getElementById('img-prompt').value.trim();
   if(!prompt){ toast('Write a prompt first!'); return; }
-  if(!workerUrl || workerUrl === 'YOUR_WORKER_URL_HERE'){ toast('⚙️ Set your Worker URL in Settings'); openSettings(); return; }
+  if(!workerUrl || workerUrl === 'YOUR_WORKER_URL_HERE' || !workerUrl.startsWith('https://')){ toast('⚙️ Set your Worker URL in Settings (must be https://)'); openSettings(); return; }
   const fullPrompt = imgStyle ? prompt + ', ' + imgStyle : prompt;
   lastPromptText = fullPrompt;
   const btn = document.getElementById('img-gen-btn');
