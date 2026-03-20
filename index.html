@@ -725,7 +725,17 @@ window.onload = () => {
 
 // ── GOOGLE AUTH ──
 function initGoogleAuth(){
-  if(!window.google) { setTimeout(initGoogleAuth, 500); return; }
+  if(typeof initGoogleAuth.retries === 'undefined') initGoogleAuth.retries = 0;
+  if(!window.google) {
+    if(initGoogleAuth.retries >= 10) {
+      console.error('Google Auth initialization failed after 5 seconds (max 10 attempts)');
+      return;
+    }
+    initGoogleAuth.retries++;
+    setTimeout(initGoogleAuth, 500);
+    return;
+  }
+  initGoogleAuth.retries = 0;
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
     scope: SCOPES,
