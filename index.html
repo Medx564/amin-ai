@@ -1446,30 +1446,6 @@ function sendImgToChat(){
   qs(`I just generated an AI image with this prompt: "${prompt}". How can I improve this prompt to get an even better result? Also suggest 3 variations I could try.`);
 }
 
-function selStyle(el, style){
-  document.querySelectorAll('.img-style-chip').forEach(c => c.classList.remove('sel'));
-  el.classList.add('sel');
-  imgStyle = style;
-}
-
-function selSize(el, w, h){
-  document.querySelectorAll('.img-opt').forEach(o => o.classList.remove('sel'));
-  el.classList.add('sel');
-  imgW = parseInt(w); imgH = parseInt(h);
-}
-
-function usePreset(el){
-  const text = el.innerText.replace(el.querySelector('.img-preset-icon').innerText, '').trim();
-  document.getElementById('img-prompt').value = text;
-}
-
-
-
-function sendImgToChat(){
-  const prompt = document.getElementById('img-prompt').value.trim();
-  switchTab('chat');
-  qs(`I just generated an AI image with this prompt: "${prompt}". How can I improve this prompt to get an even better result? Also suggest 3 variations I could try.`);
-}
 </script>
 </body>
 </html>
