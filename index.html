@@ -1277,16 +1277,48 @@ async function send(){
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
-      body: JSON.stringify({ model:'llama-3.3-70b-versatile', messages:[{role:'system',content:SYS+context},...hist], max_tokens:1024, temperature:0.85 })
+      body: JSON.stringify({ model:'llama-3.3-70b-versatile', messages:[{role:'system',content:SYS+context},...hist], max_tokens:1024, temperature:0.85, stream: true })
     });
-    const data = await r.json(); showT(false);
-    if(data.error){
-      addM('a', data.error.code==='invalid_api_key' ? '❌ Invalid Groq API key. Tap ⚙️ to update.' : '⚠️ Error: '+data.error.message);
-    } else {
-      const rep = data.choices?.[0]?.message?.content || 'No response.';
-      hist.push({role:'assistant',content:rep});
-      addM('a', rep);
+    showT(false);
+    
+    if(!r.ok){
+      const err = await r.json();
+      addM('a', err.error?.code==='invalid_api_key' ? '❌ Invalid Groq API key. Tap ⚙️ to update.' : '⚠️ Error: '+(err.error?.message||'Unknown error'));
+      busy=false; return;
     }
+    
+    // Create assistant message placeholder
+    const d = document.createElement('div');
+    d.className = 'msg a';
+    d.innerHTML = '<div class="av">🤖</div><div class="mb"><div class="bbl"></div><div class="mt">'+gt()+'</div></div>';
+    document.getElementById('msgs').insertBefore(d, document.getElementById('typing'));
+    const bbl = d.querySelector('.bbl');
+    
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+      for(const line of lines){
+        if(line.startsWith('data: ') && line !== 'data: [DONE]'){
+          try{
+            const json = JSON.parse(line.slice(6));
+            const token = json.choices?.[0]?.delta?.content || '';
+            if(token){
+              fullText += token;
+              bbl.innerHTML = fmt(fullText);
+              document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
+            }
+          } catch(e){}
+        }
+      }
+    }
+    
+    hist.push({role:'assistant',content:fullText});
   } catch(e){ showT(false); addM('a','⚠️ Connection error. Check your internet.'); }
   busy=false;
 }
