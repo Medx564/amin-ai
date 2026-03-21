@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Terms of Service — Amin AI</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap');
+
+    :root {
+      --bg: #0c0b1a;
+      --surface: #13112a;
+      --border: #2a2650;
+      --purple: #7F77DD;
+      --blue: #378ADD;
+      --text: #e8e6f8;
+      --muted: #8884aa;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(55,138,221,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(55,138,221,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      border-bottom: 1px solid var(--border);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #534AB7, #185FA5);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: var(--text);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      margin: 60px auto;
+      padding: 0 24px 80px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 2px;
+      font-weight: 500;
+      color: var(--blue);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 42px;
+      font-weight: 400;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #85B7EB, #fff, #AFA9EC);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 48px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section { margin-bottom: 40px; }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 12px;
+    }
+
+    p { color: #c8c4e4; margin-bottom: 12px; }
+
+    ul { list-style: none; padding: 0; margin-bottom: 12px; }
+
+    ul li {
+      color: #c8c4e4;
+      padding: 6px 0 6px 20px;
+      position: relative;
+    }
+
+    ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 15px;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-top: 8px;
+    }
+
+    .highlight {
+      border-left: 2px solid var(--blue);
+      padding-left: 16px;
+      color: #c8c4e4;
+      font-style: italic;
+    }
+
+    .contact-link { color: var(--blue); text-decoration: none; }
+    .contact-link:hover { text-decoration: underline; }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">A</div>
+  <span class="logo-text">AMIN AI</span>
+</header>
+
+<main>
+  <div class="badge">Legal</div>
+  <h1>Terms of Service</h1>
+  <p class="meta">Last updated: March 2026 &nbsp;·&nbsp; Effective immediately</p>
+
+  <section>
+    <h2>Acceptance of Terms</h2>
+    <p>By accessing or using Amin AI ("the App"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the App.</p>
+  </section>
+
+  <section>
+    <h2>About the App</h2>
+    <p>Amin AI is a personal AI assistant application hosted on GitHub Pages, built and maintained by Mohamedamin. The App provides AI-powered conversation, image generation, and productivity features.</p>
+  </section>
+
+  <section>
+    <h2>Permitted Use</h2>
+    <p>You may use Amin AI for lawful, personal, and non-commercial purposes. You agree not to:</p>
+    <ul>
+      <li>Use the App to generate harmful, illegal, or abusive content</li>
+      <li>Attempt to reverse-engineer, exploit, or disrupt the App's services</li>
+      <li>Use the App in any way that violates applicable local or international laws</li>
+      <li>Impersonate others or misrepresent your identity</li>
+      <li>Circumvent any access controls or security measures</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>AI-Generated Content</h2>
+    <p class="highlight">AI responses are generated automatically and may not always be accurate, complete, or appropriate. Always verify important information from authoritative sources.</p>
+    <p>The developer is not responsible for decisions made based on AI-generated content from this App.</p>
+  </section>
+
+  <section>
+    <h2>Google Account Access</h2>
+    <p>When you sign in with Google, you grant the App limited access to your Google account as described in our Privacy Policy. You can revoke this access at any time via your Google account settings.</p>
+  </section>
+
+  <section>
+    <h2>Intellectual Property</h2>
+    <p>All code, design, and branding of Amin AI are the property of the developer. You may not copy, reproduce, or redistribute any part of the App without explicit written permission.</p>
+    <p>Content you generate using the App remains yours. The developer makes no claim over your inputs or outputs.</p>
+  </section>
+
+  <section>
+    <h2>Availability & Changes</h2>
+    <ul>
+      <li>The App is provided "as is" with no guarantee of uptime or availability</li>
+      <li>Features may be added, changed, or removed at any time without notice</li>
+      <li>These Terms may be updated periodically — continued use constitutes acceptance</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Limitation of Liability</h2>
+    <p>To the fullest extent permitted by law, Amin AI and its developer shall not be liable for any indirect, incidental, or consequential damages arising from your use of the App.</p>
+  </section>
+
+  <section>
+    <h2>Contact</h2>
+    <div class="card">
+      <p style="margin:0">For questions about these Terms, contact the developer at:<br>
+      <a class="contact-link" href="mailto:mhssine73@gmail.com">mhssine73@gmail.com</a></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  &copy; 2026 Amin AI &nbsp;·&nbsp; All rights reserved
+</footer>
+
+</body>
+</html>
