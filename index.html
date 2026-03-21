@@ -412,6 +412,10 @@
       <input class="sm-input" id="ki" type="password" placeholder="gsk_..."/>
     </div>
     <div class="sm-row">
+      <div class="sm-label">Gemini API Key (Chat)</div>
+      <input class="sm-input" id="gmki" type="password" placeholder="AIza..."/>
+    </div>
+    <div class="sm-row">
       <div class="sm-label">Image Worker URL</div>
       <input class="sm-input" id="wi" type="url" placeholder="https://your-worker.workers.dev"/>
     </div>
@@ -700,6 +704,7 @@ const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com
 
 // ── STATE ──
 let groqKey = localStorage.getItem('amin_gk') || '';
+let geminiKey = localStorage.getItem('amin_gm_key') || '';
 let workerUrl = localStorage.getItem('amin_wu') || 'YOUR_WORKER_URL_HERE';
 let gToken = localStorage.getItem('amin_gtoken') || '';
 let gUser = JSON.parse(localStorage.getItem('amin_guser') || 'null');
@@ -1192,15 +1197,18 @@ function askAIAboutEvent(titleEnc, descEnc){
 // ── SETTINGS ──
 function openSettings(){
   document.getElementById('ki').value = groqKey;
+  document.getElementById('gmki').value = geminiKey;
   document.getElementById('wi').value = (workerUrl && workerUrl !== 'YOUR_WORKER_URL_HERE') ? workerUrl : '';
   document.getElementById('settings-modal').classList.add('on');
 }
 function closeSettings(){ document.getElementById('settings-modal').classList.remove('on'); }
 function saveSettings(){
   const k = document.getElementById('ki').value.trim();
+  const gm = document.getElementById('gmki').value.trim();
   const w = document.getElementById('wi').value.trim();
   if(!k){ toast('Enter your Groq API key'); return; }
   groqKey = k; localStorage.setItem('amin_gk', groqKey);
+  geminiKey = gm; localStorage.setItem('amin_gm_key', geminiKey);
   if(w){ workerUrl = w; localStorage.setItem('amin_wu', workerUrl); }
   closeSettings(); toast('✅ Settings saved!');
 }
@@ -1274,16 +1282,16 @@ async function send(){
   hist.push({ role:'user', content: txt });
   el.value=''; ar(el); busy=true; showT(true);
   try {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
-      body: JSON.stringify({ model:'llama-3.3-70b-versatile', messages:[{role:'system',content:SYS+context},...hist], max_tokens:1024, temperature:0.85, stream: true })
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+geminiKey},
+      body: JSON.stringify({ model:'gemini-2.0-flash', messages:[{role:'system',content:SYS+context},...hist], max_tokens:1024, temperature:0.85, stream: true })
     });
     showT(false);
     
-    if(!r.ok){
+    if (!r.ok) {
       const err = await r.json();
-      addM('a', err.error?.code==='invalid_api_key' ? '❌ Invalid Groq API key. Tap ⚙️ to update.' : '⚠️ Error: '+(err.error?.message||'Unknown error'));
+      addM('a', err.error?.code==='invalid_api_key' ? '❌ Invalid Gemini API key. Tap ⚙️ to update.' : '⚠️ Error: '+(err.error?.message||'Unknown error'));
       busy=false; return;
     }
     
