@@ -1285,7 +1285,7 @@ async function send(){
     const r = await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+geminiKey},
-      body: JSON.stringify({ model:'google/gemini-2.0-flash-exp:free', messages:[{role:'system',content:SYS+context},...hist], max_tokens:1024, temperature:0.85, stream: true })
+      body: JSON.stringify({ model:'google/gemini-2.0-flash-001', messages:[{role:'system',content:SYS+context},...hist], max_tokens:1024, temperature:0.85, stream: true })
     });
     showT(false);
     
