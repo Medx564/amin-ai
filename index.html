@@ -1307,6 +1307,11 @@ function toggleMic(){
   startMic();
 }
 function startMic(){
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    document.getElementById('voice-btn').style.display = 'none';
+    toast('Voice input not supported in this browser');
+    return;
+  }
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SR();
   recognition.lang = micLang;
