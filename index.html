@@ -827,7 +827,8 @@ async function loadDrive(){
   document.getElementById('drive-list').innerHTML = '<div class="g-loading">Loading files...</div>';
   document.getElementById('drive-sub').textContent = 'Loading...';
   try {
-    const r = await gFetch('https://www.googleapis.com/drive/v3/files?pageSize=50&fields=files(id,name,mimeType,modifiedTime,size,webViewLink)&orderBy=modifiedTime desc');
+    const params = new URLSearchParams({ pageSize: '50', fields: 'files(id,name,mimeType,modifiedTime,size,webViewLink)', orderBy: 'modifiedTime desc' });
+    const r = await gFetch('https://www.googleapis.com/drive/v3/files?' + params.toString());
     allDriveFiles = r.files || [];
     driveFiles = allDriveFiles;
     document.getElementById('drive-sub').textContent = driveFiles.length + ' files';
@@ -880,10 +881,10 @@ async function openDriveFile(id, name, mime, link){
     if(mime.includes('document')){
       const r = await gFetch(`https://docs.googleapis.com/v1/documents/${id}`);
       content = extractDocText(r);
-    } else if(mime.includes('spreadsheet')){
-      const r = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/A1:Z100`);
-      content = (r.values||[]).map(row => row.join('\t')).join('\n');
-    } else {
+  } else if(mime === 'application/vnd.google-apps.spreadsheet'){
+    const r = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/A1:Z100`);
+    content = (r.values||[]).map(row => row.join('\t')).join('\n');
+  } else {
       // Try export as text
       try {
         const r = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=text/plain`, { headers: { 'Authorization': 'Bearer ' + gToken }});
@@ -900,8 +901,9 @@ async function openDriveFile(id, name, mime, link){
 }
 
 function extractDocText(doc){
+  if (!doc || !doc.body) return '';
   let text = '';
-  const body = doc.body?.content || [];
+  const body = doc.body.content || [];
   body.forEach(el => {
     if(el.paragraph){
       el.paragraph.elements?.forEach(pe => { if(pe.textRun) text += pe.textRun.content; });
@@ -1167,8 +1169,14 @@ function askAIAbout(fileId, fileName, contentEnc){
 
 function askAIAboutEmail(subjectEnc, bodyEnc){
   closeDetail();
-  const subj = decodeURIComponent(subjectEnc);
-  const body = decodeURIComponent(bodyEnc);
+  let subj, body;
+  try {
+    subj = decodeURIComponent(subjectEnc);
+    body = decodeURIComponent(bodyEnc);
+  } catch(e) {
+    toast('❌ Invalid encoded data');
+    return;
+  }
   switchTab('chat');
   qs(`I just read this email:\nSubject: ${subj}\n\nContent: ${body}\n\nSummarize this email and tell me if I need to take any action.`);
 }
